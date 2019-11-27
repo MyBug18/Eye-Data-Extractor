@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using ViveSR.anipal.Eye;
 
 public class RotSickSceneManager : MonoBehaviour
 {
@@ -37,10 +38,16 @@ public class RotSickSceneManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        bool calibrationSuccessful = false;
+        do
+            calibrationSuccessful = SRanipal_Eye_v2.LaunchEyeCalibration();
+        while (!calibrationSuccessful);
+        
         StartTesting();
         _InitiallizeGrid();
         c1 = lineRotator.GetChild(0).GetComponent<Renderer>().material.color;
         c2 = Color.blue;
+        
     }
 
     // Update is called once per frame

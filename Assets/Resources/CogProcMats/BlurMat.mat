@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: postproprac
+  m_Name: BlurMat
   m_Shader: {fileID: 4800000, guid: 4904f034d9412d649bced9bd252466b6, type: 3}
   m_ShaderKeywords: GAUSS _SAMPLES_HIGH
   m_LightmapFlags: 4
@@ -73,7 +73,7 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _StandardDeviation: 0.002
+    - _StandardDeviation: 0.022
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:

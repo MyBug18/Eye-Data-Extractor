@@ -40,12 +40,14 @@ public class DataExtractor : MonoBehaviour
         streamWriter = new StreamWriter(filepath, true);
 
         
+        
         /*
         bool calibrationSuccessful = false;
         do
             calibrationSuccessful = SRanipal_Eye_v2.LaunchEyeCalibration();
         while (!calibrationSuccessful);
         */
+        
     }
 
     // Update is called once per frame
