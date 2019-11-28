@@ -29,7 +29,7 @@ namespace UnityStandardAssets.Vehicles.Car
             if (Input.GetKey(KeyCode.W)) v = 1;
 #if !MOBILE_INPUT
             float handbrake = 0;
-            if (Input.GetKey(KeyCode.S)) handbrake = 0.7f;
+            if (Input.GetKey(KeyCode.S)) v = -1;
             m_Car.Move(h, v, v, handbrake);
 #else
             m_Car.Move(h, v, v, 0f);
