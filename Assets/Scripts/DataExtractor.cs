@@ -33,7 +33,6 @@ public class DataExtractor : MonoBehaviour
             enabled = false;
             return;
         }
-        filepath = Application.dataPath + "/ExtractedDatas/data.txt";
 
         File.WriteAllLines(filepath, title.Split('\n'));
 
