@@ -19,9 +19,11 @@ public class DataExtractor : MonoBehaviour
 
     public bool keepWriting = true;
 
-    protected bool leftSizeValid, rightSizeValid, leftPositionValid, rightPositionValid;
+    protected bool leftSizeValid, rightSizeValid, leftPositionValid, rightPositionValid, directionValid;
 
-    protected string leftSize, rightSize, leftPositionX, leftPositionY, rightPositionX, rightPositionY;
+    protected string leftSize, rightSize, leftPositionX, leftPositionY, rightPositionX, rightPositionY, angleX, angleY;
+
+    protected Vector3 gazeOrigin, gazeDirection;
 
     protected StreamWriter streamWriter;
 
@@ -72,6 +74,7 @@ public class DataExtractor : MonoBehaviour
             rightPositionValid = SRanipal_Eye_v2.GetPupilPosition(EyeIndex.RIGHT, out rightPupilPosition, eyeData);
             leftSizeValid = SRanipal_Eye_v2.GetPupilSize(EyeIndex.LEFT, out leftPupilSize, eyeData);
             rightSizeValid = SRanipal_Eye_v2.GetPupilSize(EyeIndex.RIGHT, out rightPupilSize, eyeData);
+            directionValid = SRanipal_Eye_v2.GetGazeRay(GazeIndex.COMBINE, out gazeOrigin, out gazeDirection, eyeData);
         }
         else
         {
@@ -79,6 +82,7 @@ public class DataExtractor : MonoBehaviour
             rightPositionValid = SRanipal_Eye_v2.GetPupilPosition(EyeIndex.RIGHT, out rightPupilPosition);
             leftSizeValid = SRanipal_Eye_v2.GetPupilSize(EyeIndex.LEFT, out leftPupilSize);
             rightSizeValid = SRanipal_Eye_v2.GetPupilSize(EyeIndex.RIGHT, out rightPupilSize);
+            directionValid = SRanipal_Eye_v2.GetGazeRay(GazeIndex.COMBINE, out gazeOrigin, out gazeDirection);
         }
         if (leftSizeValid) leftSize = leftPupilSize.ToString(); else leftSize = "INVALID";
         if (rightSizeValid) rightSize = rightPupilSize.ToString(); else rightSize = "INVALID";
@@ -104,6 +108,24 @@ public class DataExtractor : MonoBehaviour
             rightPositionY = "INVALID";
         }
 
+        if (directionValid)
+        {
+
+
+            float _x = Vector3.Angle(gazeDirection, new Vector3(0, gazeDirection.y, gazeDirection.z));
+            float _y = Vector3.Angle(gazeDirection, new Vector3(gazeDirection.x, 0, gazeDirection.z));
+
+            if (gazeDirection.x < 0) _x = -_x;
+            if (gazeDirection.y < 0) _y = -_y;
+
+            angleX = _x + "";
+            angleY = _y + "";
+        }
+        else
+        {
+            angleX = "INVALID";
+            angleY = "INVALID";
+        }
         /*
         if (keepWriting)
             streamWriter.WriteLine(time + "," + leftSize + "," + rightSize + ", " + leftPosition + ", " + rightPosition);

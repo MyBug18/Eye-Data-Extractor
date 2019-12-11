@@ -6,6 +6,11 @@ using ViveSR.anipal.Eye;
 
 public class RotSickSceneManager : MonoBehaviour
 {
+    public bool withGrid = true;
+    public int angleLimit = 30;
+
+    [SerializeField]
+    private GameObject buildings;
 
     [SerializeField]
     private EyeTrackDetector detectorObject;
@@ -33,13 +38,15 @@ public class RotSickSceneManager : MonoBehaviour
 
     private bool isHeadRotTracked = false;
 
-    public int angleLimit = 30;
 
     // Start is called before the first frame update
     void Start()
     {
         StartTesting();
-        _InitiallizeGrid();
+        if (withGrid)
+            _InitiallizeGrid();
+        else
+            buildings.SetActive(true);
         c1 = lineRotator.GetChild(0).GetComponent<Renderer>().material.color;
         c2 = Color.blue;        
     }
@@ -83,11 +90,11 @@ public class RotSickSceneManager : MonoBehaviour
 
     private IEnumerator _BeforeFirstGazeTest()
     {
-        /*
+        
         tm.text = "안녕하세요.";
         yield return new WaitForSeconds(5f);
         tm.text = "3초간 정면의 큐브를 봐 주시기 바랍니다.";
-        */
+        
         yield return new WaitForSeconds(1f);
         StartCoroutine(_FirstGazeTest());
     }
