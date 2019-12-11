@@ -38,17 +38,7 @@ public class DataExtractor : MonoBehaviour
 
         File.WriteAllLines(filepath, title.Split('\n'));
 
-        streamWriter = new StreamWriter(filepath, true);
-
-        
-        
-        /*
-        bool calibrationSuccessful = false;
-        do
-            calibrationSuccessful = SRanipal_Eye_v2.LaunchEyeCalibration();
-        while (!calibrationSuccessful);
-        */
-        
+        streamWriter = new StreamWriter(filepath, true);      
     }
 
     // Update is called once per frame

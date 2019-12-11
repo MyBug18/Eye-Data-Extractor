@@ -6,6 +6,7 @@ using ViveSR.anipal.Eye;
 
 public class RotSickSceneManager : MonoBehaviour
 {
+    public bool calibrateOnStart = false;
     public bool withGrid = true;
     public int angleLimit = 30;
 
@@ -42,6 +43,15 @@ public class RotSickSceneManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
+        if (calibrateOnStart)
+        {
+            bool calibrationSuccessful = false;
+            do
+                calibrationSuccessful = SRanipal_Eye_v2.LaunchEyeCalibration();
+            while (!calibrationSuccessful);
+        }
+
         StartTesting();
         if (withGrid)
             _InitiallizeGrid();
@@ -132,7 +142,8 @@ public class RotSickSceneManager : MonoBehaviour
     private IEnumerator _HeadRotationTest()
     {
         headRotator.gameObject.SetActive(true);
-        tm.text = "이제 왼쪽의 하얀 막대기가\n오른쪽으로 움직입니다.";
+        tm.transform.localEulerAngles = new Vector3(0, -30, 0);
+        tm.text = "이제 하얀 막대가\n오른쪽으로 움직입니다.";
         yield return new WaitForSeconds(2f);
         tm.text = "막대가 중심의 큐브를 지나칠 때부터";
         yield return new WaitForSeconds(2f);
