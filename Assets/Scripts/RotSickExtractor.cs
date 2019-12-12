@@ -26,7 +26,8 @@ public class RotSickExtractor : DataExtractor
         result = time + "," + manager.normalizedCameraRotationY + "," + leftPupilSize + "," + leftPositionX + "," + leftPositionY + "," +
             rightPupilSize + "," + rightPositionX + ", " + rightPositionY + "," + angleX + "," + angleY;
 
-        streamWriter.WriteLine(result);
+        if (keepWriting)
+            streamWriter.WriteLine(result);
 
         time += Time.deltaTime;
     }

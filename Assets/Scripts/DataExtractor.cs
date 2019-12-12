@@ -10,10 +10,10 @@ public class DataExtractor : MonoBehaviour
     protected static EyeData_v2 eyeData = new EyeData_v2();
     protected bool eye_callback_registered = false;
 
-    public float leftPupilSize;
-    public float rightPupilSize;
-    public Vector2 leftPupilPosition;
-    public Vector2 rightPupilPosition;
+    protected float leftPupilSize;
+    protected float rightPupilSize;
+    protected Vector2 leftPupilPosition;
+    protected Vector2 rightPupilPosition;
     protected string title;
     public string filepath;
 
