@@ -5,6 +5,9 @@ using UnityEngine;
 public class VerticalSceneManager : DataExtractor
 {
     [SerializeField]
+    public Mode mode;
+
+    [SerializeField]
     private int radius, density;
 
     [SerializeField]
@@ -29,11 +32,14 @@ public class VerticalSceneManager : DataExtractor
     [SerializeField]
     private bool keepRotating;
 
+    private float time = 0;
+
     // Start is called before the first frame update
 
     protected override void Start()
     {
-        title = "asdf";
+        _InitializeTitleAndPath();
+
         base.Start();
         _InitializeSpheres();
         _InitializeBar();
@@ -50,6 +56,8 @@ public class VerticalSceneManager : DataExtractor
         if (Input.GetKey(KeyCode.D)) bar.Rotate(0, 0, 5 * Time.deltaTime);
 
         if (Input.GetKey(KeyCode.A)) bar.Rotate(0, 0, -5 * Time.deltaTime);
+
+        streamWriter.WriteLine(time + "," + direction + "," + degreePerSecond + "," + initialAngle + "," + _NormalizeAngle(bar.localEulerAngles.z) + "," + ((leftPupilSize + rightPupilSize) / 2));
     }
 
     private void _InitializeSpheres()
@@ -140,6 +148,28 @@ public class VerticalSceneManager : DataExtractor
     private void _InitializeBar()
     {
         bar.Rotate(0, 0, initialAngle);
+        if (mode == Mode.SVV) bar.parent.Rotate(0, 0, 90);
+    }
+
+    private void _InitializeTitleAndPath()
+    {
+        switch(mode)
+        {
+            case Mode.SVH:
+                title = "Time, Background Direction, Background Speed, SVH: From" + initialAngle + ", SVH: Current"  + ", Pupil Size\n";
+                filepath = "./Assets/ExtractedDatas/Subject_things/SVH_data.txt";
+                break;
+            case Mode.SVV:
+                title = "Time, Background Direction, Background Speed, SVV: From" + initialAngle + ", SVV: Current" + ", Pupil Size\n";
+                filepath = "./Assets/ExtractedDatas/Subject_things/SVV_data.txt";
+                break;
+
+        }
+    }
+
+    private float _NormalizeAngle(float v)
+    {
+        return v > 180 ? v - 360 : v;
     }
 }
 
@@ -154,6 +184,7 @@ public enum MoveDirection
 
 public enum Mode
 {
+    SVH,
     SVV,
     SPV
 }

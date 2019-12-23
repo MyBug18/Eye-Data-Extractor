@@ -8,14 +8,15 @@ public class CogProcSceneManager : MonoBehaviour
     private Transform gridPrefab, gridParent;
 
     [SerializeField]
-    private Transform cubePrefab, cubeParent;
+    private Transform cubePrefab, cubeParent, edgeParent;
 
     private Transform[,] cubeGridArray = new Transform[32, 32];
 
-    //[SerializeField]
-    //private CameraBlur blurrer;
+    [SerializeField]
+    private Speed moveSpeed;
 
-    // Start is called before the first frame update
+    [SerializeField]
+    private MoveMode mode;
     void Start()
     {
         for (int i = -16; i <= 16; i++)
@@ -31,6 +32,7 @@ public class CogProcSceneManager : MonoBehaviour
             for (int j = 0; j < 32; j++)
             {
                 cubeGridArray[i, j] = Instantiate(cubePrefab, _GridCoordToPos(i, j), Quaternion.identity, cubeParent);
+                cubeGridArray[i, j].name = "Cube";
             }
 
         var tf = new bool[] { true, false };
@@ -40,19 +42,27 @@ public class CogProcSceneManager : MonoBehaviour
             {
                 SetGrid4x4Element(i * 4, j * 4, tf[Random.Range(0, 1)]);
             }
-        
+        _InstantiateEdges();
+        _StartMoving();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void _InstantiateEdges()
     {
-        /*
-        if (Input.GetKeyDown(KeyCode.Q))
-            blurrer.blurMat.SetFloat("_BlurSize", 0f);
+        for (int i = -1; i < 32; i++)
+        {
+            Instantiate(cubePrefab, _GridCoordToPos(-1, i) + new Vector3(0, 0, -0.03f), Quaternion.identity, edgeParent);
+            Instantiate(cubePrefab, _GridCoordToPos(32, i + 1) + new Vector3(0, 0, -0.03f), Quaternion.identity, edgeParent);
+            Instantiate(cubePrefab, _GridCoordToPos(i + 1, -1) + new Vector3(0, 0, -0.03f), Quaternion.identity, edgeParent);
+            Instantiate(cubePrefab, _GridCoordToPos(i, 32) + new Vector3(0, 0, -0.03f), Quaternion.identity, edgeParent);
+        }
 
-        if (Input.GetKeyDown(KeyCode.W))
-            blurrer.blurMat.SetFloat("_BlurSize", 0.08f);
-            */
+        for (int i = -2; i < 33; i++)
+        {
+            Instantiate(cubePrefab, _GridCoordToPos(-2, i), Quaternion.identity, edgeParent);
+            Instantiate(cubePrefab, _GridCoordToPos(33, i + 1), Quaternion.identity, edgeParent);
+            Instantiate(cubePrefab, _GridCoordToPos(i + 1, -2), Quaternion.identity, edgeParent);
+            Instantiate(cubePrefab, _GridCoordToPos(i, 33), Quaternion.identity, edgeParent);
+        }
     }
 
     private bool _IsAdjacent(Vector2Int v1, Vector2Int v2)
@@ -123,4 +133,216 @@ public class CogProcSceneManager : MonoBehaviour
             }
         }
     }
+
+    private enum _Direction
+    {
+        Left,
+        Right,
+        Up,
+        Down
+    }
+    public enum MoveMode
+    {
+        Stop,
+        Up,
+        Down,
+        Left,
+        Right,
+        VerticalZigZag,
+        HorizontalZigZag
+    }
+
+    public enum Speed
+    {
+        Slow = 1,
+        Moderate = 2,
+        Fast = 3
+    }
+
+    private void _StartMoving()
+    {
+        switch (mode)
+        {
+            case MoveMode.Stop:
+                break;
+            case MoveMode.Up:
+                for (int i = 0; i < 8; i++)
+                    _Move4Line(_Direction.Up, i);
+                break;
+            case MoveMode.Down:
+                for (int i = 0; i < 8; i++)
+                    _Move4Line(_Direction.Down, i);
+                break;
+            case MoveMode.Left:
+                for (int i = 0; i < 8; i++)
+                    _Move4Line(_Direction.Left, i);
+                break;
+            case MoveMode.Right:
+                for (int i = 0; i < 8; i++)
+                    _Move4Line(_Direction.Right, i);
+                break;
+            case MoveMode.VerticalZigZag:
+                for (int i = 0; i < 8; i++)
+                    if (i % 2 == 0) _Move4Line(_Direction.Up, i); else _Move4Line(_Direction.Down, i);
+                break;
+            case MoveMode.HorizontalZigZag:
+                for (int i = 0; i < 8; i++)
+                    if (i % 2 == 0) _Move4Line(_Direction.Right, i); else _Move4Line(_Direction.Left, i);
+                break;
+
+            default:
+                throw new System.Exception();
+        }
+    }
+
+    private void _Move4Line(_Direction dir, int chunkNum)
+    {
+        for (int i = 0; i < 4; i++)
+            StartCoroutine(_MoveOneLineOnceEnum(dir, 4 * chunkNum + i));
+    }
+
+    private IEnumerator _MoveOneLineOnceEnum(_Direction dir, int lineNum)
+    {
+        while (true)
+        {
+            float amount = 0;
+            switch (dir)
+            {
+                case _Direction.Left:
+                    var aux1 = Instantiate(cubeGridArray[0, lineNum], _GridCoordToPos(32, lineNum), Quaternion.identity, cubeParent);
+                    aux1.name = "Cube";
+                    while (aux1.position.x - _GridCoordToPos(31, lineNum).x > 0)
+                    {
+                        amount += Time.fixedDeltaTime * (int)moveSpeed;
+                        for (int i = 0; i < 32; i++)
+                            cubeGridArray[i, lineNum].Translate(-Time.fixedDeltaTime * (int)moveSpeed, 0, 0);
+                        aux1.Translate(-Time.fixedDeltaTime * (int)moveSpeed, 0, 0);
+
+                        yield return null;
+                    }
+
+                    Destroy(cubeGridArray[0, lineNum].gameObject);
+                    for (int i = 0; i < 31; i++)
+                        cubeGridArray[i, lineNum] = cubeGridArray[i + 1, lineNum];
+                    cubeGridArray[31, lineNum] = aux1;
+                    break;
+
+                case _Direction.Right:
+                    var aux2 = Instantiate(cubeGridArray[31, lineNum], _GridCoordToPos(-1, lineNum), Quaternion.identity, cubeParent);
+                    aux2.name = "Cube";
+                    while (aux2.position.x - _GridCoordToPos(0, lineNum).x < 0)
+                    {
+                        amount += Time.fixedDeltaTime * (int)moveSpeed;
+                        for (int i = 0; i < 32; i++)
+                            cubeGridArray[i, lineNum].Translate(Time.fixedDeltaTime * (int)moveSpeed, 0, 0);
+                        aux2.Translate(Time.fixedDeltaTime * (int)moveSpeed, 0, 0);
+
+                        yield return null;
+                    }
+
+                    Destroy(cubeGridArray[31, lineNum].gameObject);
+                    for (int i = 31; i > 0; i--)
+                        cubeGridArray[i, lineNum] = cubeGridArray[i - 1, lineNum];
+                    cubeGridArray[0, lineNum] = aux2;
+                    break;
+
+                case _Direction.Up:
+                    var aux3 = Instantiate(cubeGridArray[lineNum, 31], _GridCoordToPos(lineNum, -1), Quaternion.identity, cubeParent);
+                    aux3.name = "Cube";
+                    while (aux3.position.y - _GridCoordToPos(lineNum, 0).y < 0)
+                    {
+                        amount += Time.fixedDeltaTime * (int)moveSpeed;
+                        for (int i = 0; i < 32; i++)
+                            cubeGridArray[lineNum, i].Translate(0, Time.fixedDeltaTime * (int)moveSpeed, 0);
+                        aux3.Translate(0, Time.fixedDeltaTime * (int)moveSpeed, 0);
+
+                        yield return null;
+                    }
+
+                    Destroy(cubeGridArray[lineNum, 31].gameObject);
+                    for (int i = 31; i > 0; i--)
+                        cubeGridArray[lineNum, i] = cubeGridArray[lineNum, i - 1];
+                    cubeGridArray[lineNum, 0] = aux3;
+                    break;
+
+                case _Direction.Down:
+                    var aux4 = Instantiate(cubeGridArray[lineNum, 0], _GridCoordToPos(lineNum, 32), Quaternion.identity, cubeParent);
+                    aux4.name = "Cube";
+                    while (aux4.position.y - _GridCoordToPos(lineNum, 31).y > 0)
+                    {
+                        amount += Time.fixedDeltaTime * (int)moveSpeed;
+                        for (int i = 0; i < 32; i++)
+                            cubeGridArray[lineNum, i].Translate(0, -Time.fixedDeltaTime * (int)moveSpeed, 0);
+                        aux4.Translate(0, -Time.fixedDeltaTime * (int)moveSpeed, 0);
+
+                        yield return null;
+                    }
+
+                    Destroy(cubeGridArray[lineNum, 0].gameObject);
+                    for (int i = 0; i < 31; i++)
+                        cubeGridArray[lineNum, i] = cubeGridArray[lineNum, i + 1];
+                    cubeGridArray[lineNum, 31] = aux4;
+                    break;
+
+                default:
+                    throw new System.Exception();
+            }
+            
+        }
+    }
+
+    /*
+    private void _MoveOneLineChunk(_Direction dir, int chunkNum)
+    {
+        for (int i = 0; i < 4; i++)
+            _MoveOneSmallLine(dir, 4 * chunkNum + i);
+    }
+
+
+    private void _MoveOneSmallLine(_Direction dir, int lineNum) // 0_based
+    {
+        switch(dir)
+        {
+            case _Direction.Left:
+                var tmp1 = cubeGridArray[0, lineNum];
+                for (int i = 1; i < 32; i++)
+                    cubeGridArray[i - 1, lineNum] = cubeGridArray[i, lineNum];
+                cubeGridArray[31, lineNum] = tmp1;
+
+                for (int i = 0; i < 32; i++)
+                    cubeGridArray[i, lineNum].position = _GridCoordToPos(i, lineNum);
+                break;
+
+            case _Direction.Right:
+                var tmp2 = cubeGridArray[31, lineNum];
+                for (int i = 31; i > 0; i--)
+                    cubeGridArray[i, lineNum] = cubeGridArray[i - 1, lineNum];
+                cubeGridArray[0, lineNum] = tmp2;
+
+                for (int i = 0; i < 32; i++)
+                    cubeGridArray[i, lineNum].position = _GridCoordToPos(i, lineNum);
+                break;
+
+            case _Direction.Up:
+                var tmp3 = cubeGridArray[lineNum, 31];
+                for (int i = 31; i > 0; i--)
+                    cubeGridArray[lineNum, i] = cubeGridArray[lineNum, i - 1];
+                cubeGridArray[lineNum, 0] = tmp3;
+
+                for (int i = 0; i < 32; i++)
+                    cubeGridArray[lineNum, i].position = _GridCoordToPos(lineNum, i);
+                break;
+
+            case _Direction.Down:
+                var tmp4 = cubeGridArray[lineNum, 0];
+                for (int i = 1; i < 32; i++)
+                    cubeGridArray[lineNum, i - 1] = cubeGridArray[lineNum, i];
+                cubeGridArray[lineNum, 31] = tmp4;
+
+                for (int i = 0; i < 32; i++)
+                    cubeGridArray[lineNum, i].position = _GridCoordToPos(lineNum, i);
+                break;
+        }
+    }
+    */
 }

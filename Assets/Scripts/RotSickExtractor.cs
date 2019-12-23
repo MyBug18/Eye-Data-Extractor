@@ -22,8 +22,7 @@ public class RotSickExtractor : DataExtractor
     {
         base.Update();
 
-        string result;
-        result = time + "," + manager.normalizedCameraRotationY + "," + leftPupilSize + "," + leftPositionX + "," + leftPositionY + "," +
+        string result = time + "," + manager.normalizedCameraRotationY + "," + leftPupilSize + "," + leftPositionX + "," + leftPositionY + "," +
             rightPupilSize + "," + rightPositionX + ", " + rightPositionY + "," + angleX + "," + angleY;
 
         if (keepWriting)
