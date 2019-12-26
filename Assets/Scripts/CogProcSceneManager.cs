@@ -5,6 +5,9 @@ using UnityEngine;
 public class CogProcSceneManager : MonoBehaviour
 {
     [SerializeField]
+    private Transform testCube;
+
+    [SerializeField]
     private Transform gridPrefab, gridParent;
 
     [SerializeField]
@@ -13,7 +16,7 @@ public class CogProcSceneManager : MonoBehaviour
     private Transform[,] cubeGridArray = new Transform[32, 32];
 
     [SerializeField]
-    private Speed moveSpeed;
+    private MoveSpeed backGroundMoveSpeed, trackingObjectMoveSpeed;
 
     [SerializeField]
     private MoveMode mode;
@@ -44,6 +47,7 @@ public class CogProcSceneManager : MonoBehaviour
             }
         _InstantiateEdges();
         _StartMoving();
+        StartCoroutine(_MoveOneTrackingObject(testCube));
     }
 
     private void _InstantiateEdges()
@@ -152,7 +156,7 @@ public class CogProcSceneManager : MonoBehaviour
         HorizontalZigZag
     }
 
-    public enum Speed
+    public enum MoveSpeed
     {
         Slow = 1,
         Moderate = 2,
@@ -213,10 +217,10 @@ public class CogProcSceneManager : MonoBehaviour
                     aux1.name = "Cube";
                     while (aux1.position.x - _GridCoordToPos(31, lineNum).x > 0)
                     {
-                        amount += Time.fixedDeltaTime * (int)moveSpeed;
+                        amount += Time.fixedDeltaTime * (int)backGroundMoveSpeed;
                         for (int i = 0; i < 32; i++)
-                            cubeGridArray[i, lineNum].Translate(-Time.fixedDeltaTime * (int)moveSpeed, 0, 0);
-                        aux1.Translate(-Time.fixedDeltaTime * (int)moveSpeed, 0, 0);
+                            cubeGridArray[i, lineNum].Translate(-Time.fixedDeltaTime * (int)backGroundMoveSpeed, 0, 0);
+                        aux1.Translate(-Time.fixedDeltaTime * (int)backGroundMoveSpeed, 0, 0);
 
                         yield return null;
                     }
@@ -232,10 +236,10 @@ public class CogProcSceneManager : MonoBehaviour
                     aux2.name = "Cube";
                     while (aux2.position.x - _GridCoordToPos(0, lineNum).x < 0)
                     {
-                        amount += Time.fixedDeltaTime * (int)moveSpeed;
+                        amount += Time.fixedDeltaTime * (int)backGroundMoveSpeed;
                         for (int i = 0; i < 32; i++)
-                            cubeGridArray[i, lineNum].Translate(Time.fixedDeltaTime * (int)moveSpeed, 0, 0);
-                        aux2.Translate(Time.fixedDeltaTime * (int)moveSpeed, 0, 0);
+                            cubeGridArray[i, lineNum].Translate(Time.fixedDeltaTime * (int)backGroundMoveSpeed, 0, 0);
+                        aux2.Translate(Time.fixedDeltaTime * (int)backGroundMoveSpeed, 0, 0);
 
                         yield return null;
                     }
@@ -251,10 +255,10 @@ public class CogProcSceneManager : MonoBehaviour
                     aux3.name = "Cube";
                     while (aux3.position.y - _GridCoordToPos(lineNum, 0).y < 0)
                     {
-                        amount += Time.fixedDeltaTime * (int)moveSpeed;
+                        amount += Time.fixedDeltaTime * (int)backGroundMoveSpeed;
                         for (int i = 0; i < 32; i++)
-                            cubeGridArray[lineNum, i].Translate(0, Time.fixedDeltaTime * (int)moveSpeed, 0);
-                        aux3.Translate(0, Time.fixedDeltaTime * (int)moveSpeed, 0);
+                            cubeGridArray[lineNum, i].Translate(0, Time.fixedDeltaTime * (int)backGroundMoveSpeed, 0);
+                        aux3.Translate(0, Time.fixedDeltaTime * (int)backGroundMoveSpeed, 0);
 
                         yield return null;
                     }
@@ -270,10 +274,10 @@ public class CogProcSceneManager : MonoBehaviour
                     aux4.name = "Cube";
                     while (aux4.position.y - _GridCoordToPos(lineNum, 31).y > 0)
                     {
-                        amount += Time.fixedDeltaTime * (int)moveSpeed;
+                        amount += Time.fixedDeltaTime * (int)backGroundMoveSpeed;
                         for (int i = 0; i < 32; i++)
-                            cubeGridArray[lineNum, i].Translate(0, -Time.fixedDeltaTime * (int)moveSpeed, 0);
-                        aux4.Translate(0, -Time.fixedDeltaTime * (int)moveSpeed, 0);
+                            cubeGridArray[lineNum, i].Translate(0, -Time.fixedDeltaTime * (int)backGroundMoveSpeed, 0);
+                        aux4.Translate(0, -Time.fixedDeltaTime * (int)backGroundMoveSpeed, 0);
 
                         yield return null;
                     }
@@ -288,6 +292,57 @@ public class CogProcSceneManager : MonoBehaviour
                     throw new System.Exception();
             }
             
+        }
+    }
+
+    private bool _IsInBoundWithMargin(Vector3 position)
+    {
+        float left = _GridCoordToPos(5, 5).x;
+        float right = _GridCoordToPos(26, 26).x;
+
+        float up = _GridCoordToPos(26, 26).y;
+        float down = _GridCoordToPos(5, 5).y;
+
+        Debug.Log(position.x > left && position.x < right && position.y > down && position.y < up);
+        return position.x > left && position.x < right && position.y > down && position.y < up;
+    }
+
+    private IEnumerator _MoveOneTrackingObject(Transform o)
+    {
+        while(true)
+        {
+            float counter = 0;
+            Vector3 startPos = o.position;
+            Vector3 toPosition = startPos;
+            float amount = Random.Range(0, 5f);
+            float duration = amount / ((float)trackingObjectMoveSpeed * 1.5f);
+
+            switch((_Direction)Random.Range(0, 4))
+            {
+                case _Direction.Down:
+                    toPosition.y -= amount;
+                    break;
+                case _Direction.Left:
+                    toPosition.x -= amount;
+                    break;
+                case _Direction.Right:
+                    toPosition.x += amount;
+                    break;
+                case _Direction.Up:
+                    toPosition.y += amount;
+                    break;
+
+            }
+
+            if (!_IsInBoundWithMargin(toPosition)) continue;
+
+            while (counter < duration)
+            {
+                counter += Time.deltaTime;
+                o.position = Vector3.Lerp(startPos, toPosition, counter / duration);
+                yield return null;
+            }
+
         }
     }
 
