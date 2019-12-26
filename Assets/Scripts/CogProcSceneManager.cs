@@ -5,7 +5,7 @@ using UnityEngine;
 public class CogProcSceneManager : MonoBehaviour
 {
     [SerializeField]
-    private Transform testCube;
+    private Transform trackingObjectPrefab;
 
     [SerializeField]
     private Transform gridPrefab, gridParent;
@@ -17,6 +17,9 @@ public class CogProcSceneManager : MonoBehaviour
 
     [SerializeField]
     private MoveSpeed backGroundMoveSpeed, trackingObjectMoveSpeed;
+
+    [SerializeField]
+    private int trackingObjectNumber;
 
     [SerializeField]
     private MoveMode mode;
@@ -45,9 +48,19 @@ public class CogProcSceneManager : MonoBehaviour
             {
                 SetGrid4x4Element(i * 4, j * 4, tf[Random.Range(0, 1)]);
             }
+
         _InstantiateEdges();
         _StartMoving();
-        StartCoroutine(_MoveOneTrackingObject(testCube));
+
+        float zoffset = 0.1f;
+
+        for (int i = 0; i < trackingObjectNumber; i++)
+        {
+            var o = Instantiate(trackingObjectPrefab, _GetRandomStartingPosition(), Quaternion.identity);
+            o.Translate(0, 0, -zoffset);
+            zoffset -= 0.1f;
+            StartCoroutine(_MoveOneTrackingObject(o));
+        }
     }
 
     private void _InstantiateEdges()
@@ -67,6 +80,14 @@ public class CogProcSceneManager : MonoBehaviour
             Instantiate(cubePrefab, _GridCoordToPos(i + 1, -2), Quaternion.identity, edgeParent);
             Instantiate(cubePrefab, _GridCoordToPos(i, 33), Quaternion.identity, edgeParent);
         }
+    }
+
+    private Vector3 _GetRandomStartingPosition()
+    {
+        int x = Random.Range(-1, 2) * 5;
+        int y = Random.Range(-1, 2) * 5;
+        float z = 19.5f;
+        return new Vector3(x, y, z);
     }
 
     private bool _IsAdjacent(Vector2Int v1, Vector2Int v2)
