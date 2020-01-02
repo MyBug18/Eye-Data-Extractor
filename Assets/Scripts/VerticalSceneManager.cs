@@ -23,8 +23,10 @@ public class VerticalSceneManager : DataExtractor
     private float degreePerSecond;
 
     [SerializeField]
-    private Transform spherePrefab, sphereParent, bar, mainCamera;
+    private Transform spherePrefab, entireSphereParent, bar, mainCamera;
 
+    [SerializeField]
+    private Transform verticalRotator1, verticalRotator2, horizontalRotator1, horizontalRotator2;
 
     [SerializeField]
     private float initialAngle;
@@ -43,7 +45,7 @@ public class VerticalSceneManager : DataExtractor
         base.Start();
         _InitializeSpheres();
         _InitializeBar();
-        StartCoroutine(_Rotate());
+        //StartCoroutine(_Rotate());
     }
 
     protected override void Update()
@@ -51,13 +53,42 @@ public class VerticalSceneManager : DataExtractor
         base.Update();
 
         bar.parent.position = mainCamera.position;
-        sphereParent.position = mainCamera.position;
+        entireSphereParent.position = mainCamera.position;
 
         if (Input.GetKey(KeyCode.D)) bar.Rotate(0, 0, 5 * Time.deltaTime);
 
         if (Input.GetKey(KeyCode.A)) bar.Rotate(0, 0, -5 * Time.deltaTime);
 
         streamWriter.WriteLine(time + "," + direction + "," + degreePerSecond + "," + initialAngle + "," + _NormalizeAngle(bar.localEulerAngles.z) + "," + ((leftPupilSize + rightPupilSize) / 2));
+
+        switch (direction)
+        {
+            case MoveDirection.Vertical:
+                entireSphereParent.Rotate(new Vector3(degreePerSecond * Time.deltaTime, 0, 0));
+                break;
+            case MoveDirection.Horizontal:
+                entireSphereParent.Rotate(new Vector3(0, degreePerSecond * Time.deltaTime, 0));
+                break;
+            case MoveDirection.Diagonal:
+                entireSphereParent.Rotate(new Vector3(degreePerSecond * Time.deltaTime, degreePerSecond * Time.deltaTime, 0));
+                break;
+            case MoveDirection.Clockwise:
+                entireSphereParent.Rotate(new Vector3(0, 0, -degreePerSecond * Time.deltaTime));
+                break;
+            case MoveDirection.CounterClockwise:
+                entireSphereParent.Rotate(new Vector3(0, 0, degreePerSecond * Time.deltaTime));
+                break;
+            case MoveDirection.VerticalZigZag:
+                verticalRotator1.Rotate(degreePerSecond * Time.deltaTime, 0, 0);
+                verticalRotator2.Rotate(-degreePerSecond * Time.deltaTime, 0, 0);
+                break;
+            case MoveDirection.HorizontalZigZag:
+                horizontalRotator1.Rotate(0, degreePerSecond * Time.deltaTime, 0);
+                horizontalRotator2.Rotate(0, -degreePerSecond * Time.deltaTime, 0);
+                break;
+            default:
+                throw new System.InvalidOperationException("Invalid Move Mode Enum!");
+        }
     }
 
     private void _InitializeSpheres()
@@ -70,7 +101,22 @@ public class VerticalSceneManager : DataExtractor
 
         foreach (Vector3 value in pts)
         {
-            uspheres.Add(Instantiate(spherePrefab, sphereParent).gameObject);
+            var s = Instantiate(spherePrefab);
+            uspheres.Add(s.gameObject);
+            if (direction == MoveDirection.VerticalZigZag)
+            {
+                if (value.x > 0) s.parent = verticalRotator1;
+                else s.parent = verticalRotator2;
+            }
+            else if (direction == MoveDirection.HorizontalZigZag)
+            {
+                if (value.y > 0) s.parent = horizontalRotator1;
+                else s.parent = horizontalRotator2;
+            }
+            else
+            {
+                s.parent = entireSphereParent;
+            }
             uspheres[i].transform.position = value * scaling;
             i++;
         }
@@ -108,7 +154,6 @@ public class VerticalSceneManager : DataExtractor
         {
             if (keepRotating)
             {
-                Debug.Log("asdf");
                 float deg = 0;
                 MoveDirection dir = direction;
 
@@ -119,19 +164,19 @@ public class VerticalSceneManager : DataExtractor
                     switch(dir)
                     {
                         case MoveDirection.Horizontal:
-                            sphereParent.Rotate(new Vector3(0, amount, 0));
+                            entireSphereParent.Rotate(new Vector3(0, amount, 0));
                             break;
                         case MoveDirection.Vertical:
-                            sphereParent.Rotate(new Vector3(amount, 0, 0));
+                            entireSphereParent.Rotate(new Vector3(amount, 0, 0));
                             break;
                         case MoveDirection.Diagonal:
-                            sphereParent.Rotate(new Vector3(amount, amount, 0));
+                            entireSphereParent.Rotate(new Vector3(amount, amount, 0));
                             break;
                         case MoveDirection.Clockwise:
-                            sphereParent.Rotate(new Vector3(0, 0, -amount));
+                            entireSphereParent.Rotate(new Vector3(0, 0, -amount));
                             break;
                         case MoveDirection.CounterClockwise:
-                            sphereParent.Rotate(new Vector3(0, 0, amount));
+                            entireSphereParent.Rotate(new Vector3(0, 0, amount));
                             break;
                         default:
                             throw new System.InvalidOperationException("Invalid Enum Type!");
@@ -179,7 +224,9 @@ public enum MoveDirection
     Horizontal,
     Diagonal,
     Clockwise,
-    CounterClockwise
+    CounterClockwise,
+    VerticalZigZag,
+    HorizontalZigZag
 }
 
 public enum Mode

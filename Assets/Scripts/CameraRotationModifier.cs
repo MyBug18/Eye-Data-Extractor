@@ -8,6 +8,7 @@ public class CameraRotationModifier : MonoBehaviour
     [SerializeField]
     private Transform mainCamera;
 
+    public bool isDelay = false;
     public float delaySecond = 0;
     public float speedMultiplier = 1;
 
@@ -18,15 +19,23 @@ public class CameraRotationModifier : MonoBehaviour
 
     private float _time = 0;
 
+    private bool initiallized = false;
+
     // Start is called before the first frame update
     void Start()
     {
-        transform.eulerAngles = Vector3.zero;
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!initiallized)
+        {
+            transform.eulerAngles = Vector3.zero;
+            initiallized = true;
+        }
+
+
         currentVec = mainCamera.localEulerAngles;
         Vector3 deltaVec = currentVec - prevVec;
 
@@ -100,17 +109,23 @@ public class CameraRotationModifier : MonoBehaviour
         }
         transform.localEulerAngles -= deltaVec;
 
-        if (_time < delaySecond)
+        if (isDelay)
         {
-            plannedMove.Enqueue(Vector3.zero);
-            _time += Time.deltaTime;
+            if (_time < delaySecond)
+            {
+                plannedMove.Enqueue(Vector3.zero);
+                _time += Time.deltaTime;
+            }
+            else
+            {
+                plannedMove.Enqueue(speedMultiplier * deltaVec);
+                transform.localEulerAngles += plannedMove.Dequeue();
+            }
         }
         else
         {
-            plannedMove.Enqueue(speedMultiplier * deltaVec);
-            transform.localEulerAngles += plannedMove.Dequeue();
+            transform.localEulerAngles += speedMultiplier * deltaVec;
         }
-
 
         prevVec = currentVec;
     }
