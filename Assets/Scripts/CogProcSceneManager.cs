@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
-public class CogProcSceneManager : MonoBehaviour
+public class CogProcSceneManager : DataExtractor
 {
     [SerializeField]
     private Transform trackingObjectPrefab;
@@ -21,10 +22,17 @@ public class CogProcSceneManager : MonoBehaviour
     [SerializeField]
     private int trackingObjectNumber;
 
+    private float time = 0;
+
     [SerializeField]
     private MoveMode mode;
-    void Start()
+    protected override void Start()
     {
+        title = "Time, Pupil Size";
+        filepath = "./Assets/ExtractedDatas/CogProcess/data.txt";
+
+        base.Start();
+
         for (int i = -16; i <= 16; i++)
         {
             Instantiate(gridPrefab, new Vector3((float)i * 2 / 3, 0, 20), Quaternion.identity, gridParent);
@@ -54,12 +62,32 @@ public class CogProcSceneManager : MonoBehaviour
 
         float zoffset = 0.1f;
 
+        CogProcessTrackingObject.TotalCount = trackingObjectNumber;
         for (int i = 0; i < trackingObjectNumber; i++)
         {
             var o = Instantiate(trackingObjectPrefab, _GetRandomStartingPosition(), Quaternion.identity);
             o.Translate(0, 0, -zoffset);
             zoffset -= 0.1f;
             StartCoroutine(_MoveOneTrackingObject(o));
+        }
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+        string result = time + "," + ((leftSizeValid && rightSizeValid) ? ((leftPupilSize + rightPupilSize) / 2).ToString() : "INVALID");
+        streamWriter.WriteLine(result);
+        time += Time.deltaTime;
+
+        if (keepWriting && CogProcessTrackingObject.TotalCount == 0)
+        {
+            string _result = "";
+            _result += "Pattern: " + mode;
+            _result += "\nSpeed: " + backGroundMoveSpeed;
+            _result += "\nNumber of Objects: " + trackingObjectNumber;
+            _result += "\nSpent Time: " + time;
+
+            File.WriteAllLines("./Assets/ExtractedDatas/CogProcess/info.txt", _result.Split('\n'));
         }
     }
 
@@ -324,7 +352,6 @@ public class CogProcSceneManager : MonoBehaviour
         float up = _GridCoordToPos(26, 26).y;
         float down = _GridCoordToPos(5, 5).y;
 
-        Debug.Log(position.x > left && position.x < right && position.y > down && position.y < up);
         return position.x > left && position.x < right && position.y > down && position.y < up;
     }
 

@@ -1,0 +1,4 @@
+Pattern: VerticalZigZag
+Speed: Moderate
+Number of Objects: 3
+Spent Time: 11.33732

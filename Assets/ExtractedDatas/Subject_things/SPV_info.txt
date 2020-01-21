@@ -1,0 +1,4 @@
+Direction: HorizontalZigZag
+Degree per Second: 10
+Initial Degree: 30
+Final Degree: 35.92767

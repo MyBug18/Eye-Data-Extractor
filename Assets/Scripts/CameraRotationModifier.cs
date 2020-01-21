@@ -24,17 +24,14 @@ public class CameraRotationModifier : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        transform.localEulerAngles = Vector3.zero;
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        if (!initiallized)
-        {
-            transform.eulerAngles = Vector3.zero;
-            initiallized = true;
-        }
-
+        if (Input.GetKeyDown(KeyCode.Space))
+            transform.localEulerAngles = Vector3.zero;
 
         currentVec = mainCamera.localEulerAngles;
         Vector3 deltaVec = currentVec - prevVec;

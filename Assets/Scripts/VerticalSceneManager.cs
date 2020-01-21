@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 public class VerticalSceneManager : DataExtractor
 {
@@ -34,6 +35,9 @@ public class VerticalSceneManager : DataExtractor
     [SerializeField]
     private bool keepRotating;
 
+    [SerializeField]
+    private Transform cam;
+
     private float time = 0;
 
     // Start is called before the first frame update
@@ -54,12 +58,28 @@ public class VerticalSceneManager : DataExtractor
 
         bar.parent.position = mainCamera.position;
         entireSphereParent.position = mainCamera.position;
+        if (mode != Mode.SPV)
+        {
+            if (Input.GetKey(KeyCode.D)) bar.Rotate(0, 0, 5 * Time.deltaTime);
+            if (Input.GetKey(KeyCode.A)) bar.Rotate(0, 0, -5 * Time.deltaTime);
+        }
 
-        if (Input.GetKey(KeyCode.D)) bar.Rotate(0, 0, 5 * Time.deltaTime);
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            string _result = "";
+            _result += "Direction: " + direction;
+            _result += "\nDegree per Second: " + degreePerSecond;
+            _result += "\nInitial Degree: " + initialAngle;
 
-        if (Input.GetKey(KeyCode.A)) bar.Rotate(0, 0, -5 * Time.deltaTime);
+            float finalDegree;
+            if (mode == Mode.SPV) finalDegree = cam.transform.localEulerAngles.z;
+            else finalDegree = bar.localEulerAngles.z;
 
-        streamWriter.WriteLine(time + "," + direction + "," + degreePerSecond + "," + initialAngle + "," + _NormalizeAngle(bar.localEulerAngles.z) + "," + ((leftPupilSize + rightPupilSize) / 2));
+            _result += "\nFinal Degree: " + _NormalizeAngle(finalDegree);
+
+            File.WriteAllLines("./Assets/ExtractedDatas/Subject_things/" + mode + "_info.txt", _result.Split('\n'));
+            keepWriting = false;
+        }
 
         switch (direction)
         {
@@ -88,6 +108,13 @@ public class VerticalSceneManager : DataExtractor
                 break;
             default:
                 throw new System.InvalidOperationException("Invalid Move Mode Enum!");
+        }
+
+        if (keepWriting)
+        {
+            string result = time + "," + ((leftSizeValid && rightSizeValid) ? ((leftPupilSize + rightPupilSize) / 2).ToString() : "INVALID");
+            streamWriter.WriteLine(result);
+            time += Time.deltaTime;
         }
     }
 
@@ -198,17 +225,18 @@ public class VerticalSceneManager : DataExtractor
 
     private void _InitializeTitleAndPath()
     {
+        title = "Time, Pupil Size";
         switch(mode)
         {
             case Mode.SVH:
-                title = "Time, Background Direction, Background Speed, SVH: From" + initialAngle + ", SVH: Current"  + ", Pupil Size\n";
                 filepath = "./Assets/ExtractedDatas/Subject_things/SVH_data.txt";
                 break;
             case Mode.SVV:
-                title = "Time, Background Direction, Background Speed, SVV: From" + initialAngle + ", SVV: Current" + ", Pupil Size\n";
                 filepath = "./Assets/ExtractedDatas/Subject_things/SVV_data.txt";
                 break;
-
+            case Mode.SPV:
+                filepath = "./Assets/ExtractedDatas/Subject_things/SPV_data.txt";
+                break;
         }
     }
 
