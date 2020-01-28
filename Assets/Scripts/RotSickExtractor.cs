@@ -13,7 +13,7 @@ public class RotSickExtractor : DataExtractor
     // Start is called before the first frame update
     protected override void Start()
     {
-        title = "Time, Head Rotation, Left Pupil Size, Left Pupil Position X, Left Pupil Position Y, Right Pupil Size, Right Pupil Position X, Right Pupil Position Y, Direction X, Direction Y";
+        title = "Time, Head Rotation, Pupil Size, Pupil Position X, Pupil Position Y";
         base.Start();
     }
 
@@ -22,8 +22,9 @@ public class RotSickExtractor : DataExtractor
     {
         base.Update();
 
-        string result = time + "," + manager.normalizedCameraRotationY + "," + leftPupilSize + "," + leftPositionX + "," + leftPositionY + "," +
-            rightPupilSize + "," + rightPositionX + ", " + rightPositionY + "," + angleX + "," + angleY;
+        string result = time + "," + manager.normalizedCameraRotationY + "," + ((leftSizeValid && rightSizeValid) ? ((leftPupilSize + rightPupilSize) / 2).ToString() : "INVALID") + "," +
+            ((leftPositionValid && rightPositionValid) ? ((leftPupilPosition.x + rightPupilPosition.x) / 2).ToString() : "INVALID") + "," +
+            ((leftPositionValid && rightPositionValid) ? ((leftPupilPosition.y + rightPupilPosition.y) / 2).ToString() : "INVALID");
 
         if (keepWriting)
             streamWriter.WriteLine(result);

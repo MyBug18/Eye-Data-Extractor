@@ -8,14 +8,18 @@ public class CameraRotationModifier : MonoBehaviour
     [SerializeField]
     private Transform mainCamera;
 
-    public bool isDelay = false;
-    public float delaySecond = 0;
-    public float speedMultiplier = 1;
+    private bool isDelay = false;
+    private float delaySecond = 0;
+    public float rotationSpeedMultiplier = 1;
+    public float movementSpeedMultiplier = 1;
 
-    private Vector3 prevVec = Vector3.zero;
-    private Vector3 currentVec = Vector3.zero;
+    private Vector3 prevRotVec = Vector3.zero;
+    private Vector3 currentRotVec = Vector3.zero;
 
-    private Queue<Vector3> plannedMove = new Queue<Vector3>();
+    private Vector3 prevPosVec = Vector3.zero;
+    private Vector3 currentPosVec = Vector3.zero;
+
+    //private Queue<Vector3> plannedMove = new Queue<Vector3>();
 
     private float _time = 0;
 
@@ -33,10 +37,10 @@ public class CameraRotationModifier : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
             transform.localEulerAngles = Vector3.zero;
 
-        currentVec = mainCamera.localEulerAngles;
-        Vector3 deltaVec = currentVec - prevVec;
+        currentRotVec = mainCamera.localEulerAngles;
+        Vector3 deltaVec = currentRotVec - prevRotVec;
 
-        if (prevVec.y < 180)
+        if (prevRotVec.y < 180)
         {
             if (deltaVec.y < 180)
             {
@@ -59,7 +63,7 @@ public class CameraRotationModifier : MonoBehaviour
             }
         }
 
-        if (prevVec.x < 180)
+        if (prevRotVec.x < 180)
         {
             if (deltaVec.x < 180)
             {
@@ -82,7 +86,7 @@ public class CameraRotationModifier : MonoBehaviour
             }
         }
 
-        if (prevVec.z < 180)
+        if (prevRotVec.z < 180)
         {
             if (deltaVec.z < 180)
             {
@@ -106,24 +110,13 @@ public class CameraRotationModifier : MonoBehaviour
         }
         transform.localEulerAngles -= deltaVec;
 
-        if (isDelay)
-        {
-            if (_time < delaySecond)
-            {
-                plannedMove.Enqueue(Vector3.zero);
-                _time += Time.deltaTime;
-            }
-            else
-            {
-                plannedMove.Enqueue(speedMultiplier * deltaVec);
-                transform.localEulerAngles += plannedMove.Dequeue();
-            }
-        }
-        else
-        {
-            transform.localEulerAngles += speedMultiplier * deltaVec;
-        }
+        transform.localEulerAngles += rotationSpeedMultiplier * deltaVec;
 
-        prevVec = currentVec;
+        currentPosVec = mainCamera.localPosition;
+        Vector3 deltaPos = currentPosVec - prevPosVec;
+        transform.localPosition += movementSpeedMultiplier * deltaPos;
+
+        prevRotVec = currentRotVec;
+        prevPosVec = currentPosVec;
     }
 }

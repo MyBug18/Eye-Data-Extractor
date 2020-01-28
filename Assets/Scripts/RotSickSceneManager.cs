@@ -9,9 +9,14 @@ public class RotSickSceneManager : MonoBehaviour
     public bool calibrateOnStart = false;
     public bool withGrid = true;
     public int angleLimit = 30;
+    public float rotationSpeedMultiplier = 1;
+    public float movementSpeedMultiplier = 1;
 
     [SerializeField]
     private GameObject buildings;
+
+    [SerializeField]
+    private CameraRotationModifier crm;
 
     [SerializeField]
     private EyeTrackDetector detectorObject;
@@ -58,7 +63,17 @@ public class RotSickSceneManager : MonoBehaviour
         else
             buildings.SetActive(true);
         c1 = lineRotator.GetChild(0).GetComponent<Renderer>().material.color;
-        c2 = Color.blue;        
+        c2 = Color.blue;
+
+        crm.rotationSpeedMultiplier = rotationSpeedMultiplier;
+        crm.movementSpeedMultiplier = movementSpeedMultiplier;
+
+        string info = "";
+        info += "With Building: " + !withGrid;
+        info += "\nRotation Speed Multiplier: " + rotationSpeedMultiplier;
+        info += "\nMovement Speed Multiplier: " + movementSpeedMultiplier;
+
+        System.IO.File.WriteAllLines("Assets/ExtractedDatas/RotSickness/info.txt", info.Split('\n'));
     }
 
     // Update is called once per frame
@@ -79,8 +94,6 @@ public class RotSickSceneManager : MonoBehaviour
         }
 
         lineRotator.GetChild(0).GetComponent<Renderer>().material.color = Color.Lerp(lineRotator.GetChild(0).GetComponent<Renderer>().material.color, c2, Time.deltaTime * (1 / animationTime));
-        headRotator.position = mainCamera.transform.position;
-        gridParent.position = mainCamera.transform.position;
     }
 
     private void _InitiallizeGrid()
@@ -94,92 +107,28 @@ public class RotSickSceneManager : MonoBehaviour
     }
     public void StartTesting()
     {
-        StartCoroutine(_BeforeFirstGazeTest());
-    }
-
-
-    private IEnumerator _BeforeFirstGazeTest()
-    {
-        
-        tm.text = "안녕하세요.";
-        yield return new WaitForSeconds(5f);
-        tm.text = "3초간 정면의 큐브를 봐 주시기 바랍니다.";
-        
-        yield return new WaitForSeconds(1f);
-        StartCoroutine(_FirstGazeTest());
-    }
-
-    private IEnumerator _FirstGazeTest()
-    {
-        detectorObject.gameObject.SetActive(true);
-        float time = 0;
-        float loseTime = 0;
-        while (time < 3)
-        {
-            time += Time.deltaTime;
-            if (detectorObject.isGazed == false)
-            {
-                loseTime += Time.deltaTime;
-            }
-            else
-            {
-                loseTime = 0;
-            }
-
-            if (loseTime > 0.5)
-            {
-                tm.text = "다시 큐브를 봐 주시기 바랍니다.";
-                time = 0;
-            }
-            yield return null;
-        }
-        tm.text = "잘 하셨습니다.";
-        //detectorObject.gameObject.SetActive(false);
-        yield return new WaitForSeconds(2f);
-        StartCoroutine(_HeadRotationTest());
-    }
-
-    private IEnumerator _HeadRotationTest()
-    {
-        headRotator.gameObject.SetActive(true);
-        tm.transform.localEulerAngles = new Vector3(0, -30, 0);
-        tm.text = "이제 하얀 막대가\n오른쪽으로 움직입니다.";
-        yield return new WaitForSeconds(2f);
-        tm.text = "막대가 중심의 큐브를 지나칠 때부터";
-        yield return new WaitForSeconds(2f);
-        tm.text = "큐브를 계속 쳐다보며";
-        yield return new WaitForSeconds(2f);
-        tm.text = "막대를 따라 고개를\n돌려 주시기 바랍니다.";
-        yield return new WaitForSeconds(2f);
-        tm.text = "고개가 옳은 방향을 향하고 있다면";
-        yield return new WaitForSeconds(2f);
-        tm.text = "막대가 파랗게 변할 것입니다.";
-
-        yield return StartCoroutine(_LineRotatorMovement());
+        StartCoroutine(_LineRotatorMovement());
     }
 
     private IEnumerator _LineRotatorMovement()
     {
-        while (normalizedLineRotatorY < angleLimit)
+        while (true)
         {
-            lineRotator.transform.localEulerAngles += new Vector3(0, 5 * Time.deltaTime, 0);
-            yield return null;
-        }
+            while (normalizedLineRotatorY < angleLimit)
+            {
+                lineRotator.transform.localEulerAngles += new Vector3(0, 5 * Time.deltaTime, 0);
+                yield return null;
+            }
 
-        yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1f);
 
-        while (normalizedLineRotatorY > -angleLimit)
-        {
-            lineRotator.transform.localEulerAngles += new Vector3(0, -5 * Time.deltaTime, 0);
-            yield return null;
-        }
+            while (normalizedLineRotatorY > -angleLimit)
+            {
+                lineRotator.transform.localEulerAngles += new Vector3(0, -5 * Time.deltaTime, 0);
+                yield return null;
+            }
 
-        yield return new WaitForSeconds(1f);
-
-        while (normalizedLineRotatorY < 0)
-        {
-            lineRotator.transform.localEulerAngles += new Vector3(0, 5 * Time.deltaTime, 0);
-            yield return null;
+            yield return new WaitForSeconds(1f);
         }
     }
 
